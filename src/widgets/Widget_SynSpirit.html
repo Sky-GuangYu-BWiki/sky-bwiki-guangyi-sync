@@ -1,0 +1,137 @@
+<includeonly><div id="spirit-import" class="spirit-import" data-list="{{{1|travel_spirit_cn}}}">
+  <div class="spirit-import-row">
+    <input id="spirit-import-uid" class="spirit-import-input" type="text" placeholder="游戏 ID，例如 10046789" />
+    <button id="spirit-import-query" class="spirit-import-btn">查询</button>
+  </div>
+  <div id="spirit-import-prompt" class="spirit-import-prompt"></div>
+</div>
+<h2>鸣谢</h2>
+<ul>
+  <li>技术支持：VincentZyu</li>
+</ul>
+<style>
+  .spirit-import { margin: 1em 0; padding: 1em; border: 1px solid #e5e7eb; border-radius: 10px; background: #fafafa; }
+  .spirit-import-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .spirit-import-input { flex: 1 1 200px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+  .spirit-import-btn { padding: 6px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; }
+  .spirit-import-btn:hover { background: #f3f4f6; }
+  .spirit-import-btn:disabled { opacity: .6; cursor: default; }
+  .spirit-import-prompt { display: none; margin-top: 8px; padding: 1em; border-radius: 6px; border: 1px solid #d0d0d0; border-left-width: 5px; border-left-style: solid; text-align: center; line-height: 1.6; }
+</style><!--
+
+--><script>
+(function () {
+  if (window.__spiritImportInited) return;
+  window.__spiritImportInited = true;
+
+  const root = document.getElementById("spirit-import");
+  if (!root) return;
+
+  function resolveListName() {
+    const raw = String(root.dataset.list || "").trim();
+    const m = raw.match(/^\{\{\{\s*1\s*\|([^}]*)\}\}\}$/);
+    const candidate = (m ? m[1] : raw).trim();
+    return /^[A-Za-z0-9_\-]+$/.test(candidate) ? candidate : "travel_spirit_cn";
+  }
+
+  const LIST_NAME = resolveListName();
+  const OPTION_KEY = "userjs-collectionList-" + LIST_NAME;
+  const API_BASE = "https://cf-guangyi.vincentzyu233.cn";
+
+  const PREFIX_MAP = "l_";
+  const PREFIX_PERMANENT = "s_";
+
+  const $uid = document.getElementById("spirit-import-uid");
+  const $prompt = document.getElementById("spirit-import-prompt");
+  const $btnQuery = document.getElementById("spirit-import-query");
+
+  function showPrompt(kind, html) {
+    const c = {
+      ok:   { bg: "#d3f5d4", border: "rgb(119 214 112)" },
+      warn: { bg: "#fcf8e3", border: "rgb(231 249 88)" },
+      err:  { bg: "#ffd9d9", border: "rgb(255 29 29 / 78%)" },
+    }[kind] || { bg: "#d3f5d4", border: "rgb(119 214 112)" };
+    $prompt.style.backgroundColor = c.bg;
+    $prompt.style.borderLeftColor = c.border;
+    $prompt.innerHTML = html;
+    $prompt.style.display = "block";
+  }
+
+  function parsePayload(payload) {
+    if (!payload || payload.success !== true) throw new Error("响应 success 不为 true");
+    const data = payload.data || {};
+    if (data.code !== 200) throw new Error("接口返回 code " + data.code + "：" + (data.errmsg || ""));
+    let inner;
+    try {
+      inner = typeof data.result === "string" ? JSON.parse(data.result) : data.result;
+    } catch (e) {
+      throw new Error("data.result 不是合法 JSON");
+    }
+    if (!inner || inner.result !== "ok") throw new Error("业务结果非 ok：" + (inner && inner.result));
+    if (!Array.isArray(inner.wing_buffs)) throw new Error("缺少 wing_buffs 数组");
+    return inner.wing_buffs;
+  }
+
+  function extractNames(spiritBuffs) {
+    return Array.from(new Set(
+      spiritBuffs
+        .filter(s => s && s.collected === true)
+        .map(s => String(s.name || "").trim())
+        .filter(Boolean)
+    )).sort();
+  }
+
+  function countByPrefix(names) {
+    return {
+      total: names.length,
+      map: names.filter(n => n.startsWith(PREFIX_MAP)).length,
+      permanent: names.filter(n => n.startsWith(PREFIX_PERMANENT)).length,
+    };
+  }
+
+  async function overwriteOption(names) {
+    const api = new mw.Api();
+    const info = await api.get({
+      action: "query", format: "json", formatversion: 2,
+      meta: "userinfo", uiprop: "options",
+    });
+    const userinfo = info && info.query && info.query.userinfo;
+    if (!userinfo || userinfo.anon) throw new Error("请先登录后再导入");
+
+    await api.postWithToken("csrf", {
+      action: "options", format: "json",
+      optionname: OPTION_KEY, optionvalue: names.join(","),
+    });
+  }
+
+  $btnQuery.addEventListener("click", async () => {
+    const uid = ($uid.value || "").trim();
+    if (!uid) { showPrompt("warn", "请先填写游戏 ID。"); return; }
+
+    $btnQuery.disabled = true;
+    showPrompt("warn", "查询中……");
+    try {
+      const res = await fetch(API_BASE + "/queryGuangyi?id=" + encodeURIComponent(uid));
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const spiritBuffs = parsePayload(await res.json());
+      const names = extractNames(spiritBuffs);
+      if (names.length === 0) {
+        showPrompt("warn", "接口未返回任何已收集项（collected=true），未做任何写入。");
+        return;
+      }
+      await overwriteOption(names);
+      const { total, map, permanent } = countByPrefix(names);
+      showPrompt("ok",
+        `导入成功：<b>${total}</b> 个光之翼，` +
+        `<b>${map}</b> 个地图光之翼，` +
+        `<b>${permanent}</b> 个永久光之翼。`
+      );
+    } catch (e) {
+      showPrompt("err",
+        "查询失败：" + (e && e.message ? e.message : e));
+    } finally {
+      $btnQuery.disabled = false;
+    }
+  });
+})();
+</script></includeonly><noinclude>{{#Widget:SynSpirit}}</noinclude>

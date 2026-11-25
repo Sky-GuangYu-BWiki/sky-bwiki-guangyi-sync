@@ -1,0 +1,56 @@
+{{面包屑|先祖}}{{先祖导航}}
+{{#arraydefine:所有季节先祖|{{#arraymap:{{#ask: [[分类:奇妙之旅]]|sort=开启时间|link=none}}|,|@@@@|{{#arraymap:{{#ask:[[-Has subobject::@@@@]][[先祖类型::非人形先祖||人形先祖]]|?先祖中文名|format=array|headers=hide|mainlabel=-}}|,|@@|@@|,}}|,}}|,}}{{#arraydefine:国服复刻顺序|{{#ask:[[分类:复刻项]][[分类:国服]]|?先祖中文名|limit=1000|sort=结束时间|order=desc|link=none|format=array|mainlabel=-|headers=hide}}|,|unique,sort=reverse}}{{#arraydefine:国际服复刻顺序|{{#ask:[[分类:复刻项]][[分类:国际服]]|?先祖中文名|limit=1000|sort=结束时间|order=desc|link=none|format=array|mainlabel=-|headers=hide}}|,|unique,sort=reverse}}{{#arraydiff: diff_cn | 所有季节先祖 | 国服复刻顺序 }}{{#arraydiff: diff_int | 所有季节先祖 | 国际服复刻顺序 }}
+{{切换标签|开始
+|<big><big> 国服 </big></big>
+|<big><big> 国际服 </big></big>
+|<big><big> 导入 </big></big>
+}}
+总计 {{#arraysize:所有季节先祖}} 位季节先祖， 已有 {{#arraysize:国服复刻顺序}} 位季节先祖加入复刻，尚有 {{#arraysize:diff_cn}} 位季节先祖未加入复刻。另外常驻先祖可提供 49 个永久光之翼。<br />
+<font color=green>点击图标进行标记：</font><br />
+你已经拥有了 <span class="bwiki-collection-checknum-travel_spirit_cn">统计中...</span> 位复刻先祖
+<!-- 本页共收录 <span class="bwiki-collection-totalnum-travel_spirit_cn">统计中...</span> 位。 -->
+{{#widget:复刻计时器排序}}
+<div class="ap-list">
+{{#arrayprint:国服复刻顺序||@|{{复刻计时器|@}}}}
+</div>
+{{#vardefine: ea }}
+{{切换标签}}
+总计 {{#arraysize:所有季节先祖}} 位季节先祖， 已有 {{#arraysize:国际服复刻顺序}} 位季节先祖加入复刻，尚有 {{#arraysize:diff_int}} 位季节先祖未加入复刻。另外常驻先祖可提供 49 个永久光之翼。<br />
+<font color=green>点击图标进行标记：</font><br />
+你已经拥有了 <span class="bwiki-collection-checknum-travel_spirit_int">统计中...</span> 位复刻先祖
+<!-- 本页共收录 <span class="bwiki-collection-totalnum-travel_spirit_int">统计中...</span> 位。 -->
+{{#widget:复刻计时器排序}}
+<div class="ap-list">
+{{#arrayprint:国际服复刻顺序||@|{{复刻计时器|@|int}}}}
+</div>
+{{切换标签}}
+{{提示|提示|此功能仅支持国服（网易）}}
+{{#Widget:SynSpirit}}
+<!-- == 帮助 ==
+# 在输入框填写游戏 UID，点击'''跳转'''。
+# 在新标签页中复制 JSON：
+#* '''电脑'''：按 <kbd>Ctrl</kbd> + <kbd>A</kbd> 全选，<kbd>Ctrl</kbd> + <kbd>C</kbd> 复制。
+#* '''手机'''：长按文字 → 选择「全选」→ 点「复制」。
+# 回到本页，点击'''粘贴'''（也可在文本框中长按 → 「粘贴」，或电脑按 <kbd>Ctrl</kbd> + <kbd>V</kbd>）。
+# 点击'''导入'''。 -->
+{{切换标签|结束}}{{#css:
+.d-tab-titles {
+    text-align: center;
+    margin-bottom: 12px;
+}
+.d-tab-title {
+    background: #7bc2de;
+    border: 1px solid #fff;
+    display: inline-block;
+    height: auto;
+    padding: 2px 0px;
+    text-decoration: none;
+    width: 76px;
+    text-align: center;
+    color: #fff;
+}
+.d-tab-titles .active {
+    color: #7bc2de;
+    background: #fff;
+}
+}}

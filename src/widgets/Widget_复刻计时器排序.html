@@ -1,0 +1,391 @@
+<includeonly>
+<div class="ap-sortbar">
+  <div class="ap-reverse-btn" role="button" tabindex="0">排序反转</div>
+  <div class="ap-sort-btn" role="button" tabindex="0">复刻次数</div>
+  <div class="ap-filter-btn" role="button" tabindex="0">隐藏已获取</div>
+  <div class="ap-checkall-btn" role="button" tabindex="0">全部勾选</div>
+</div>
+
+<style>
+.ap-sortbar {
+  margin: 6px 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ap-reverse-btn,
+.ap-sort-btn,
+.ap-filter-btn,
+.ap-checkall-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  border: 1px solid #0b4ab5;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ap-sort-btn {
+  padding: 0 22px 0 10px;
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 2L4.5 6h7L8 2zM8 14l3.5-4h-7L8 14z' fill='%23999'/%3E%3C/svg%3E");
+}
+
+.ap-reverse-btn,
+.ap-filter-btn,
+.ap-checkall-btn {
+  padding: 0 10px;
+}
+
+.ap-reverse-btn:hover,
+.ap-sort-btn:hover,
+.ap-filter-btn:hover,
+.ap-checkall-btn:hover {
+  background-color: #e5e7eb;
+}
+.ap-reverse-btn:active,
+.ap-sort-btn:active,
+.ap-filter-btn:active,
+.ap-checkall-btn:active {
+  background-color: #d8d8d8;
+}
+.ap-sort-btn[data-dir="asc"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 3L4 9h8L8 3z' fill='%2336c'/%3E%3C/svg%3E");
+}
+.ap-sort-btn[data-dir="desc"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 13l4-6H4l4 6z' fill='%23336c'/%3E%3C/svg%3E");
+}
+
+/* 二次确认状态：error 红色高亮提示 */
+.ap-checkall-btn.ap-confirming {
+  background-color: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
+}
+.ap-checkall-btn.ap-confirming:hover {
+  background-color: #fee2e2;
+}
+.ap-checkall-btn.ap-confirming:active {
+  background-color: #fecaca;
+}
+
+.ap-reverse-btn:focus-visible,
+.ap-sort-btn:focus-visible,
+.ap-filter-btn:focus-visible,
+.ap-checkall-btn:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+</style>
+
+<script>
+(function () {
+  function init() {
+    document.querySelectorAll('.ap-sortbar').forEach(function (sortbar) {
+      if (sortbar.dataset.bound === '1') return;
+      sortbar.dataset.bound = '1';
+
+      var reverseBtn = sortbar.querySelector('.ap-reverse-btn');
+      var sortBtn = sortbar.querySelector('.ap-sort-btn');
+      var filterBtn = sortbar.querySelector('.ap-filter-btn');
+      var checkAllBtn = sortbar.querySelector('.ap-checkall-btn');
+
+      // 找本 sortbar 对应的列表
+      var list = sortbar.nextElementSibling;
+      while (list && !(list.classList && list.classList.contains('ap-list'))) {
+        list = list.nextElementSibling;
+      }
+      if (!list && sortbar.parentElement) {
+        list = sortbar.parentElement.querySelector('.ap-list');
+      }
+      if (!list) return;
+
+      var itemsOf = function () {
+        return Array.prototype.slice.call(list.children);
+      };
+
+      var isChecked = function (el) {
+        return el.classList.contains('checked') ||
+               el.getAttribute('data-paramc') === '已获取';
+      };
+
+      // ===== 倒序：直接反转当前列表顺序 =====
+      if (reverseBtn) {
+        var reverseList = function () {
+          var items = itemsOf();
+          items.reverse().forEach(function (el) {
+            list.appendChild(el);
+          });
+        };
+
+        reverseBtn.addEventListener('click', reverseList);
+        reverseBtn.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            reverseList();
+          }
+        });
+      }
+
+      // ===== 排序（三态循环：none → asc → desc → none）=====
+      if (sortBtn) {
+        var original = itemsOf();
+        var dir = 'none';
+
+        var countOf = function (el) {
+          var t = el.querySelector('.ap-extra-item:nth-child(2)');
+          return t ? (parseInt(t.textContent.replace(/\D/g, ''), 10) || 0) : 0;
+        };
+
+        var setDir = function (d) {
+          dir = d;
+          if (d === 'none') delete sortBtn.dataset.dir;
+          else sortBtn.dataset.dir = d;
+        };
+
+        var applySort = function () {
+          if (dir === 'none') {
+            original.forEach(function (el) { list.appendChild(el); });
+            return;
+          }
+          var items = itemsOf();
+          items.sort(function (a, b) {
+            var ca = countOf(a), cb = countOf(b);
+            return dir === 'asc' ? ca - cb : cb - ca;
+          });
+          items.forEach(function (el) { list.appendChild(el); });
+        };
+
+        var cycleSort = function () {
+          var next = dir === 'none' ? 'asc' : dir === 'asc' ? 'desc' : 'none';
+          setDir(next);
+          applySort();
+        };
+
+        sortBtn.addEventListener('click', cycleSort);
+        sortBtn.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            cycleSort();
+          }
+        });
+      }
+
+      // ===== 筛选（三态循环：全部 → 隐藏已获取 → 只看已获取 → 全部）=====
+      if (filterBtn) {
+        var mode = 0;
+
+        var applyFilter = function () {
+          itemsOf().forEach(function (el) {
+            var checked = isChecked(el);
+            el.style.display =
+              mode === 0 ? '' :
+              mode === 1 ? (checked ? 'none' : '') :
+              (checked ? '' : 'none');
+          });
+
+          filterBtn.textContent =
+            mode === 0 ? '隐藏已获取' :
+            mode === 1 ? '仅已获取' :
+            '显示全部';
+        };
+
+        var cycleFilter = function () {
+          mode = (mode + 1) % 3;
+          applyFilter();
+        };
+
+        filterBtn.addEventListener('click', cycleFilter);
+        filterBtn.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            cycleFilter();
+          }
+        });
+
+        var observer = new MutationObserver(function () {
+          if (mode !== 0) applyFilter();
+        });
+        observer.observe(list, {
+          attributes: true,
+          subtree: true,
+          attributeFilter: ['class', 'data-paramc', 'data-collection-checked']
+        });
+
+        applyFilter();
+      }
+
+      // ===== 真正的全部勾选 / 全部取消（写入数据库）=====
+      if (checkAllBtn) {
+        var pending = null;
+        var pendingTimer = null;
+        var batchRunning = false;
+
+        var allChecked = function () {
+          var items = itemsOf();
+          if (items.length === 0) return false;
+          return items.every(function (el) { return el.classList.contains('checked'); });
+        };
+
+        var updateCheckAllLabel = function () {
+          if (pending || batchRunning) return;
+          checkAllBtn.textContent = allChecked() ? '全部取消' : '全部勾选';
+        };
+
+        var resetPending = function () {
+          if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+          pending = null;
+          checkAllBtn.classList.remove('ap-confirming');
+          updateCheckAllLabel();
+        };
+
+        var getCurrentList = function (listName) {
+          if (typeof collectionList !== 'undefined' && collectionList[listName]) {
+            return collectionList[listName].slice();
+          }
+          return itemsOf()
+            .filter(function (el) {
+              return el.getAttribute('data-collectionlist') === listName &&
+                     el.classList.contains('checked');
+            })
+            .map(function (el) { return el.getAttribute('data-collection'); })
+            .filter(Boolean);
+        };
+
+        var saveCollectionList = function (listName, arr) {
+          var value = arr.join(',');
+
+          if (typeof changeUserOptions === 'function') {
+            changeUserOptions('userjs-collectionList-' + listName, value);
+            return;
+          }
+          if (typeof window.changeUserOptions === 'function') {
+            window.changeUserOptions('userjs-collectionList-' + listName, value);
+            return;
+          }
+
+          if (typeof mw !== 'undefined' && mw.Api && mw.user && mw.user.tokens) {
+            new mw.Api().postWithToken('csrf', {
+              action: 'options',
+              optionname: 'userjs-collectionList-' + listName,
+              optionvalue: value,
+              format: 'json'
+            });
+          }
+        };
+
+        var runToggleAll = function (want) {
+          var items = itemsOf();
+          var groups = {};
+
+          items.forEach(function (el) {
+            var listName = el.getAttribute('data-collectionlist');
+            var name = el.getAttribute('data-collection');
+            if (!listName || !name) return;
+            if (!groups[listName]) groups[listName] = [];
+            groups[listName].push(name);
+          });
+
+          Object.keys(groups).forEach(function (listName) {
+            var names = groups[listName];
+            var arr = getCurrentList(listName);
+
+            if (want) {
+              names.forEach(function (n) {
+                if (arr.indexOf(n) === -1) arr.push(n);
+              });
+            } else {
+              arr = arr.filter(function (n) { return names.indexOf(n) === -1; });
+            }
+
+            if (typeof collectionList !== 'undefined') {
+              collectionList[listName] = arr;
+            }
+
+            saveCollectionList(listName, arr);
+          });
+
+          items.forEach(function (el) {
+            if (want) {
+              el.classList.add('checked');
+              el.setAttribute('data-paramc', '已获取');
+            } else {
+              el.classList.remove('checked');
+              el.setAttribute('data-paramc', '未获取');
+            }
+          });
+
+          Object.keys(groups).forEach(function (listName) {
+            var counter = document.querySelector('.bwiki-collection-checknum-' + listName);
+            if (counter) {
+              var arr = getCurrentList(listName);
+              counter.textContent = arr.length;
+            }
+          });
+        };
+
+        var toggleAll = function () {
+          var items = itemsOf();
+          if (items.length === 0) return;
+
+          if (pending === null) {
+            var want = !allChecked();
+            pending = want ? 'check' : 'uncheck';
+            checkAllBtn.textContent = want ? '确认全部勾选？' : '确认全部取消？';
+            checkAllBtn.classList.add('ap-confirming');
+            pendingTimer = setTimeout(resetPending, 4000);
+            return;
+          }
+
+          var finalWant = pending === 'check';
+          resetPending();
+          batchRunning = true;
+          runToggleAll(finalWant);
+          batchRunning = false;
+          updateCheckAllLabel();
+        };
+
+        checkAllBtn.addEventListener('click', toggleAll);
+        checkAllBtn.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleAll();
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (pending !== null && !checkAllBtn.contains(e.target)) {
+            resetPending();
+          }
+        });
+
+        var checkObserver = new MutationObserver(updateCheckAllLabel);
+        checkObserver.observe(list, {
+          attributes: true,
+          subtree: true,
+          attributeFilter: ['class', 'data-paramc', 'data-collection-checked']
+        });
+
+        updateCheckAllLabel();
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</includeonly>
