@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>BWiki 复刻计时器光翼导入组件 - 本地沙盒模拟器</title>
+  <title>BWiki 复刻计时器光翼导入组件 - 本地沙盒环境</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -36,12 +36,13 @@
       background: #1e1e1e;
       color: #85e89d;
       font-family: Consolas, monospace;
-      padding: 12px;
+      padding: 14px;
       border-radius: 6px;
-      margin-top: 20px;
-      font-size: 12px;
-      max-height: 200px;
+      margin-top: 24px;
+      font-size: 13px;
+      max-height: 250px;
       overflow-y: auto;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -56,11 +57,32 @@
     ℹ️ <b>沙盒说明</b>：此页面本地模拟了 MediaWiki 的 <code>mw.Api()</code> 环境。点击查询将真实请求你的 Cloudflare 双线生产 API <code>https://cf-guangyi.vincentzyu233.cn</code>，并在下方控制台模拟输出写入用户配置。
   </div>
 
-  <!-- Widget 宿主 -->
-  <div id="widget-mount-point"></div>
+  <!-- Widget 挂载区域 (直接内联，完全兼容 file:/// 本地双击协议) -->
+  <div id="widget-mount-point">
+    <div id="spirit-import" class="spirit-import" data-list="travel_spirit_cn">
+      <div class="spirit-import-row">
+        <input id="spirit-import-uid" class="spirit-import-input" type="text" placeholder="游戏 ID，例如 10046789" />
+        <button id="spirit-import-query" class="spirit-import-btn">查询</button>
+      </div>
+      <div id="spirit-import-prompt" class="spirit-import-prompt"></div>
+    </div>
+    <h2>鸣谢</h2>
+    <ul>
+      <li>技术支持：VincentZyu</li>
+    </ul>
+    <style>
+      .spirit-import { margin: 1em 0; padding: 1em; border: 1px solid #e5e7eb; border-radius: 10px; background: #fafafa; }
+      .spirit-import-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .spirit-import-input { flex: 1 1 200px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+      .spirit-import-btn { padding: 6px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; }
+      .spirit-import-btn:hover { background: #f3f4f6; }
+      .spirit-import-btn:disabled { opacity: .6; cursor: default; }
+      .spirit-import-prompt { display: none; margin-top: 8px; padding: 1em; border-radius: 6px; border: 1px solid #d0d0d0; border-left-width: 5px; border-left-style: solid; text-align: center; line-height: 1.6; }
+    </style>
+  </div>
 
   <div class="mock-console" id="mock-console">
-    > 模拟器已就绪，等待交互...
+    > 模拟器已就绪，Widget 挂载完成。输入光遇数字 ID 点击「查询」即可测试！
   </div>
 </div>
 
@@ -76,7 +98,7 @@ window.mw = {
   Api: function() {
     return {
       get: async function(params) {
-        logConsole('调用 mw.Api.get: ' + JSON.stringify(params));
+        logConsole('📡 调用 mw.Api.get 获取当前用户信息: ' + JSON.stringify(params));
         return {
           query: {
             userinfo: {
@@ -88,9 +110,10 @@ window.mw = {
         };
       },
       postWithToken: async function(token, params) {
-        logConsole('✅ 成功模拟写入 B站配置 (mw.Api.postWithToken):');
-        logConsole('  - optionname: ' + params.optionname);
-        logConsole('  - 写入项目数: ' + (params.optionvalue ? params.optionvalue.split(',').length : 0) + ' 个节点');
+        logConsole('💾 触发写入 B站个人配置 (mw.Api.postWithToken):');
+        logConsole('  • optionname: ' + params.optionname);
+        const count = params.optionvalue ? params.optionvalue.split(',').length : 0;
+        logConsole('  • 成功将 ' + count + ' 个已收集节点写入配置库！');
         return { options: 'success' };
       }
     };
@@ -104,31 +127,127 @@ function logConsole(msg) {
 }
 </script>
 
-<!-- 加载实际的 Widget HTML 片段 -->
+<!-- Widget 核心原生脚本 -->
 <script>
-fetch('../src/widgets/Widget_SynSpirit.html')
-  .then(res => res.text())
-  .then(html => {
-    // 过滤掉 includeonly 标签，挂载到页面
-    const cleanHtml = html
-      .replace(/<includeonly>/g, '')
-      .replace(/<\/includeonly>[\s\S]*/g, '');
-    
-    const mount = document.getElementById('widget-mount-point');
-    mount.innerHTML = cleanHtml;
+(function () {
+  if (window.__spiritImportInited) return;
+  window.__spiritImportInited = true;
 
-    // 执行 script
-    const scripts = mount.querySelectorAll('script');
-    scripts.forEach(s => {
-      const runScript = document.createElement('script');
-      runScript.text = s.text;
-      document.body.appendChild(runScript);
+  const root = document.getElementById("spirit-import");
+  if (!root) return;
+
+  function resolveListName() {
+    const raw = String(root.dataset.list || "").trim();
+    const m = raw.match(/^\{\{\{\s*1\s*\|([^}]*)\}\}\}$/);
+    const candidate = (m ? m[1] : raw).trim();
+    return /^[A-Za-z0-9_\-]+$/.test(candidate) ? candidate : "travel_spirit_cn";
+  }
+
+  const LIST_NAME = resolveListName();
+  const OPTION_KEY = "userjs-collectionList-" + LIST_NAME;
+  const API_BASE = "https://cf-guangyi.vincentzyu233.cn";
+
+  const PREFIX_MAP = "l_";
+  const PREFIX_PERMANENT = "s_";
+
+  const $uid = document.getElementById("spirit-import-uid");
+  const $prompt = document.getElementById("spirit-import-prompt");
+  const $btnQuery = document.getElementById("spirit-import-query");
+
+  function showPrompt(kind, html) {
+    const c = {
+      ok:   { bg: "#d3f5d4", border: "rgb(119 214 112)" },
+      warn: { bg: "#fcf8e3", border: "rgb(231 249 88)" },
+      err:  { bg: "#ffd9d9", border: "rgb(255 29 29 / 78%)" },
+    }[kind] || { bg: "#d3f5d4", border: "rgb(119 214 112)" };
+    $prompt.style.backgroundColor = c.bg;
+    $prompt.style.borderLeftColor = c.border;
+    $prompt.innerHTML = html;
+    $prompt.style.display = "block";
+  }
+
+  function parsePayload(payload) {
+    if (!payload || payload.success !== true) throw new Error("响应 success 不为 true");
+    const data = payload.data || {};
+    if (data.code !== 200) throw new Error("接口返回 code " + data.code + "：" + (data.errmsg || ""));
+    let inner;
+    try {
+      inner = typeof data.result === "string" ? JSON.parse(data.result) : data.result;
+    } catch (e) {
+      throw new Error("data.result 不是合法 JSON");
+    }
+    if (!inner || inner.result !== "ok") throw new Error("业务结果非 ok：" + (inner && inner.result));
+    if (!Array.isArray(inner.wing_buffs)) throw new Error("缺少 wing_buffs 数组");
+    return inner.wing_buffs;
+  }
+
+  function extractNames(spiritBuffs) {
+    return Array.from(new Set(
+      spiritBuffs
+        .filter(s => s && s.collected === true)
+        .map(s => String(s.name || "").trim())
+        .filter(Boolean)
+    )).sort();
+  }
+
+  function countByPrefix(names) {
+    return {
+      total: names.length,
+      map: names.filter(n => n.startsWith(PREFIX_MAP)).length,
+      permanent: names.filter(n => n.startsWith(PREFIX_PERMANENT)).length,
+    };
+  }
+
+  async function overwriteOption(names) {
+    const api = new mw.Api();
+    const info = await api.get({
+      action: "query", format: "json", formatversion: 2,
+      meta: "userinfo", uiprop: "options",
     });
-    logConsole('> Widget 代码已成功挂载渲染');
-  })
-  .catch(err => {
-    logConsole('❌ 加载 Widget 失败: ' + err.message);
+    const userinfo = info && info.query && info.query.userinfo;
+    if (!userinfo || userinfo.anon) throw new Error("请先登录后再导入");
+
+    await api.postWithToken("csrf", {
+      action: "options", format: "json",
+      optionname: OPTION_KEY, optionvalue: names.join(","),
+    });
+  }
+
+  $btnQuery.addEventListener("click", async () => {
+    const uid = ($uid.value || "").trim();
+    if (!uid) { showPrompt("warn", "请先填写游戏 ID。"); return; }
+
+    $btnQuery.disabled = true;
+    showPrompt("warn", "查询中……");
+    logConsole('🚀 开始发起查询: ID=' + uid + ' -> ' + API_BASE);
+    try {
+      const res = await fetch(API_BASE + "/queryGuangyi?id=" + encodeURIComponent(uid));
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const rawData = await res.json();
+      logConsole('📦 成功接收 API 响应，开始解析 wing_buffs...');
+      const spiritBuffs = parsePayload(rawData);
+      const names = extractNames(spiritBuffs);
+      if (names.length === 0) {
+        showPrompt("warn", "接口未返回任何已收集项（collected=true），未做任何写入。");
+        return;
+      }
+      await overwriteOption(names);
+      const { total, map, permanent } = countByPrefix(names);
+      showPrompt("ok",
+        `导入成功：<b>${total}</b> 个光之翼，` +
+        `<b>${map}</b> 个地图光之翼，` +
+        `<b>${permanent}</b> 个永久光之翼。`
+      );
+      logConsole('🎉 导入流程全部顺利完成！');
+    } catch (e) {
+      logConsole('❌ 查询或解析出错: ' + (e && e.message ? e.message : e));
+      showPrompt("err",
+        "查询失败：" + (e && e.message ? e.message : e));
+    } finally {
+      $btnQuery.disabled = false;
+    }
   });
+})();
 </script>
 
 </body>
