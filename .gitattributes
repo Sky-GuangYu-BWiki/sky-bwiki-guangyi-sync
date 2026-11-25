@@ -1,2 +1,6 @@
+# 将所有 Markdown（包括 README.md）及 wikitext 纳入 GitHub 语言统计
 *.md linguist-detectable=true
+*.md linguist-documentation=false
+README.md linguist-detectable=true
+README.md linguist-documentation=false
 *.wikitext linguist-detectable=true
