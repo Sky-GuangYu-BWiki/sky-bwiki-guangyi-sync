@@ -1,25 +1,256 @@
-<includeonly><div id="spirit-import" class="spirit-import" data-list="{{{1|travel_spirit_cn}}}">
-  <div class="spirit-import-row">
-    <input id="spirit-import-uid" class="spirit-import-input" type="text" placeholder="游戏 ID，例如 137106295" />
-    <button id="spirit-import-query" class="spirit-import-btn">查询</button>
+<includeonly><div id="spirit-import" class="spirit-import-card" data-list="{{{1|travel_spirit_cn}}}">
+  <div class="spirit-import-header">
+    <div class="spirit-import-title">
+      <span class="spirit-import-icon">✨</span>
+      <span>光之翼数据同步</span>
+      <span class="spirit-import-badge">网易大神直连</span>
+    </div>
+    <div class="spirit-import-subtitle">输入光遇角色数字 ID，快速点亮并同步全量光翼至本页面复刻收集进度库</div>
   </div>
-  <div id="spirit-import-prompt" class="spirit-import-prompt"></div>
-</div>
-<h2>鸣谢</h2>
-<ul>
-  <li>技术支持：VincentZyu</li>
-</ul>
-<style>
-  .spirit-import { margin: 1em 0; padding: 1em; border: 1px solid #e5e7eb; border-radius: 10px; background: #fafafa; }
-  .spirit-import-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .spirit-import-input { flex: 1 1 200px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
-  .spirit-import-btn { padding: 6px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; }
-  .spirit-import-btn:hover { background: #f3f4f6; }
-  .spirit-import-btn:disabled { opacity: .6; cursor: default; }
-  .spirit-import-prompt { display: none; margin-top: 8px; padding: 1em; border-radius: 6px; border: 1px solid #d0d0d0; border-left-width: 5px; border-left-style: solid; text-align: center; line-height: 1.6; }
-</style><!--
 
---><script>
+  <div class="spirit-import-form">
+    <div class="spirit-import-input-wrap">
+      <span class="input-icon">🆔</span>
+      <input id="spirit-import-uid" class="spirit-import-input" type="text" placeholder="请输入游戏 ID，例如 137106295" value="137106295" />
+    </div>
+    <button id="spirit-import-query" class="spirit-import-btn">
+      <span class="btn-icon">⚡</span>
+      <span class="btn-text">一键同步</span>
+    </button>
+  </div>
+
+  <div id="spirit-import-prompt" class="spirit-import-prompt"></div>
+
+  <div class="spirit-import-footer">
+    <div class="spirit-import-credit">
+      <span class="credit-dot"></span> 技术支持：<b class="credit-author">VincentZyu</b>
+    </div>
+    <div class="spirit-import-shield">
+      <span class="shield-icon">🛡️</span>
+      <span>Cloudflare 极速双线加速已接入</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .spirit-import-card {
+    margin: 1.5em 0;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 255, 0.92) 100%);
+    border: 1.5px solid rgba(102, 126, 234, 0.28);
+    border-radius: 16px;
+    box-shadow: 0 10px 32px rgba(102, 126, 234, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    color: #1e293b;
+    box-sizing: border-box;
+  }
+  .spirit-import-header {
+    margin-bottom: 16px;
+  }
+  .spirit-import-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #4a5dc9;
+    letter-spacing: -0.2px;
+    text-shadow: 0 2px 10px rgba(74, 93, 201, 0.2);
+  }
+  .spirit-import-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+  }
+  .spirit-import-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    color: #5b46b5;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 20px;
+    margin-left: 4px;
+  }
+  .spirit-import-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+  .spirit-import-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .spirit-import-input-wrap {
+    flex: 1 1 240px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .spirit-import-input-wrap .input-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 15px;
+    pointer-events: none;
+    opacity: 0.75;
+  }
+  .spirit-import-input {
+    width: 100%;
+    padding: 11px 14px 11px 36px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #0f172a;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+  }
+  .spirit-import-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3.5px rgba(102, 126, 234, 0.25);
+    background: #fafcff;
+  }
+  .spirit-import-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.38);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+  }
+  .spirit-import-btn:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.48);
+    filter: brightness(1.04);
+  }
+  .spirit-import-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+  .spirit-import-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .spirit-import-prompt {
+    display: none;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    animation: spiritFadeIn 0.3s ease-out;
+  }
+  @keyframes spiritFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .spirit-prompt-ok {
+    background: linear-gradient(135deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.85));
+    border: 1.5px solid rgba(74, 222, 128, 0.45);
+    color: #14532d;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  }
+  .spirit-prompt-warn {
+    background: linear-gradient(135deg, rgba(254, 249, 195, 0.95), rgba(254, 240, 138, 0.85));
+    border: 1.5px solid rgba(250, 204, 21, 0.5);
+    color: #713f12;
+  }
+  .spirit-prompt-err {
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.95), rgba(254, 226, 226, 0.85));
+    border: 1.5px solid rgba(248, 113, 113, 0.45);
+    color: #7f1d1d;
+  }
+  .spirit-prompt-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .spirit-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .spirit-stat-box {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
+    border: 1.5px solid rgba(102, 126, 234, 0.3);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+  }
+  .spirit-stat-num {
+    font-size: 26px;
+    font-weight: 800;
+    color: #4a5dc9;
+    line-height: 1.1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 2px 8px rgba(74, 93, 201, 0.3);
+  }
+  .spirit-stat-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 2px;
+  }
+  .spirit-import-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(102, 126, 234, 0.16);
+    font-size: 12px;
+    color: #64748b;
+  }
+  .spirit-import-credit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .credit-dot {
+    width: 6px;
+    height: 6px;
+    background: #667eea;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .credit-author {
+    color: #4a5dc9;
+    font-weight: 700;
+  }
+  .spirit-import-shield {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    color: #475569;
+    background: rgba(102, 126, 234, 0.08);
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+</style>
+
+<script>
 (function () {
   if (window.__spiritImportInited) return;
   window.__spiritImportInited = true;
@@ -46,13 +277,10 @@
   const $btnQuery = document.getElementById("spirit-import-query");
 
   function showPrompt(kind, html) {
-    const c = {
-      ok:   { bg: "#d3f5d4", border: "rgb(119 214 112)" },
-      warn: { bg: "#fcf8e3", border: "rgb(231 249 88)" },
-      err:  { bg: "#ffd9d9", border: "rgb(255 29 29 / 78%)" },
-    }[kind] || { bg: "#d3f5d4", border: "rgb(119 214 112)" };
-    $prompt.style.backgroundColor = c.bg;
-    $prompt.style.borderLeftColor = c.border;
+    $prompt.className = "spirit-import-prompt " + (
+      kind === "ok" ? "spirit-prompt-ok" :
+      kind === "err" ? "spirit-prompt-err" : "spirit-prompt-warn"
+    );
     $prompt.innerHTML = html;
     $prompt.style.display = "block";
   }
@@ -106,29 +334,40 @@
 
   $btnQuery.addEventListener("click", async () => {
     const uid = ($uid.value || "").trim();
-    if (!uid) { showPrompt("warn", "请先填写游戏 ID。"); return; }
+    if (!uid) { showPrompt("warn", "⚠️ 请先填写光遇游戏角色 ID。"); return; }
 
     $btnQuery.disabled = true;
-    showPrompt("warn", "查询中……");
+    showPrompt("warn", "⏳ 正在通过 Cloudflare 高速检索网易大神光翼数据并校验……");
     try {
       const res = await fetch(API_BASE + "/queryGuangyi?id=" + encodeURIComponent(uid));
       if (!res.ok) throw new Error("HTTP " + res.status);
       const spiritBuffs = parsePayload(await res.json());
       const names = extractNames(spiritBuffs);
       if (names.length === 0) {
-        showPrompt("warn", "接口未返回任何已收集项（collected=true），未做任何写入。");
+        showPrompt("warn", "⚠️ 接口未返回任何已收集项（collected=true），未做任何写入。");
         return;
       }
       await overwriteOption(names);
       const { total, map, permanent } = countByPrefix(names);
-      showPrompt("ok",
-        `导入成功：<b>${total}</b> 个光之翼，` +
-        `<b>${map}</b> 个地图光之翼，` +
-        `<b>${permanent}</b> 个永久光之翼。`
-      );
+      showPrompt("ok", `
+        <div class="spirit-prompt-banner">🎉 同步成功！已点亮并写入 Wiki 个人收集库</div>
+        <div class="spirit-stats-grid">
+          <div class="spirit-stat-box">
+            <div class="spirit-stat-num">${total}</div>
+            <div class="spirit-stat-title">✨ 总收集光之翼</div>
+          </div>
+          <div class="spirit-stat-box">
+            <div class="spirit-stat-num">${map}</div>
+            <div class="spirit-stat-title">🗺️ 地图光之翼</div>
+          </div>
+          <div class="spirit-stat-box">
+            <div class="spirit-stat-num">${permanent}</div>
+            <div class="spirit-stat-title">👻 永久光之翼</div>
+          </div>
+        </div>
+      `);
     } catch (e) {
-      showPrompt("err",
-        "查询失败：" + (e && e.message ? e.message : e));
+      showPrompt("err", "❌ 同步失败：" + (e && e.message ? e.message : e));
     } finally {
       $btnQuery.disabled = false;
     }
