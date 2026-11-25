@@ -6,6 +6,18 @@
     <div class="spirit-import-desc">输入光遇角色数字 ID，快速点亮并同步全量光翼至复刻收集进度库</div>
   </div>
 
+  <div class="spirit-import-route-selector">
+    <span class="route-label">线路选择：</span>
+    <label class="route-radio-item">
+      <input type="radio" name="spirit_route" value="direct" checked />
+      <span>国内直连 (推荐)</span>
+    </label>
+    <label class="route-radio-item">
+      <input type="radio" name="spirit_route" value="cf" />
+      <span>Cloudflare 加速</span>
+    </label>
+  </div>
+
   <div class="spirit-import-form">
     <input id="spirit-import-uid" class="spirit-import-input" type="text" placeholder="游戏 ID，例如 137106295" value="137106295" />
     <button id="spirit-import-query" class="spirit-import-btn">一键同步</button>
@@ -14,8 +26,8 @@
   <div id="spirit-import-prompt" class="spirit-import-prompt"></div>
 
   <div class="spirit-import-footer">
-    <div class="spirit-import-author">技术支持：<b>VincentZyu</b></div>
-    <div class="spirit-import-service">接口服务：Cloudflare 节点加速</div>
+    <div class="spirit-import-author">技术支持：<a href="https://space.bilibili.com/34318934" target="_blank" rel="noopener noreferrer" class="credit-link">VincentZyu</a></div>
+    <div class="spirit-import-service" id="spirit-import-service-label">当前线路：国内直连 (自动双线容灾)</div>
   </div>
 </div>
 
@@ -48,6 +60,30 @@
     color: #64748b;
     margin-top: 4px;
     line-height: 1.4;
+  }
+  .spirit-import-route-selector {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #475569;
+  }
+  .route-label {
+    font-weight: 600;
+    color: #334155;
+  }
+  .route-radio-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .route-radio-item input {
+    cursor: pointer;
+    accent-color: #4a5dc9;
   }
   .spirit-import-form {
     display: flex;
@@ -164,9 +200,15 @@
     font-size: 12px;
     color: #94a3b8;
   }
-  .spirit-import-author b {
+  .spirit-import-author b,
+  .spirit-import-author .credit-link {
     color: #4a5dc9;
     font-weight: 600;
+    text-decoration: none;
+  }
+  .spirit-import-author .credit-link:hover {
+    text-decoration: underline;
+    color: #3b4cb8;
   }
   .spirit-import-service {
     color: #64748b;
@@ -190,7 +232,11 @@
 
   const LIST_NAME = resolveListName();
   const OPTION_KEY = "userjs-collectionList-" + LIST_NAME;
-  const API_BASE = "https://cf-guangyi.vincentzyu233.cn";
+
+  const ROUTES = {
+    direct: { name: "国内直连", url: "https://guangyi.vincentzyu233.cn" },
+    cf:     { name: "Cloudflare加速", url: "https://cf-guangyi.vincentzyu233.cn" }
+  };
 
   const PREFIX_MAP = "l_";
   const PREFIX_PERMANENT = "s_";
@@ -198,6 +244,12 @@
   const $uid = document.getElementById("spirit-import-uid");
   const $prompt = document.getElementById("spirit-import-prompt");
   const $btnQuery = document.getElementById("spirit-import-query");
+  const $serviceLabel = document.getElementById("spirit-import-service-label");
+
+  function getSelectedRouteKey() {
+    const checked = document.querySelector('input[name="spirit_route"]:checked');
+    return (checked && checked.value === "cf") ? "cf" : "direct";
+  }
 
   function showPrompt(kind, html) {
     $prompt.className = "spirit-import-prompt " + (
@@ -206,6 +258,19 @@
     );
     $prompt.innerHTML = html;
     $prompt.style.display = "block";
+  }
+
+  async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch (e) {
+      clearTimeout(timer);
+      throw e;
+    }
   }
 
   function parsePayload(payload) {
@@ -259,12 +324,34 @@
     const uid = ($uid.value || "").trim();
     if (!uid) { showPrompt("warn", "⚠️ 请先填写游戏 ID。"); return; }
 
+    const primaryKey = getSelectedRouteKey();
+    const fallbackKey = primaryKey === "direct" ? "cf" : "direct";
+    const primary = ROUTES[primaryKey];
+    const fallback = ROUTES[fallbackKey];
+
     $btnQuery.disabled = true;
-    showPrompt("warn", "⏳ 正在通过 Cloudflare 高速检索网易大神光翼数据并校验……");
+    showPrompt("warn", `⏳ 正在通过【${primary.name}】检索网易大神光翼数据并校验……`);
+    if ($serviceLabel) $serviceLabel.textContent = `当前线路：${primary.name}`;
+
+    let res = null;
+    let usedRouteName = primary.name;
+
     try {
-      const res = await fetch(API_BASE + "/queryGuangyi?id=" + encodeURIComponent(uid));
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const spiritBuffs = parsePayload(await res.json());
+      // 尝试首选线路（6秒超时）
+      try {
+        res = await fetchWithTimeout(primary.url + "/queryGuangyi?id=" + encodeURIComponent(uid), 6000);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+      } catch (primaryErr) {
+        // 自动故障转移：切换备用线路重试
+        showPrompt("warn", `⚠️ 【${primary.name}】连接超时或波动，正在自动切换至【${fallback.name}】重试……`);
+        usedRouteName = fallback.name;
+        if ($serviceLabel) $serviceLabel.textContent = `当前线路：${fallback.name} (自动切换)`;
+        res = await fetchWithTimeout(fallback.url + "/queryGuangyi?id=" + encodeURIComponent(uid), 8000);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+      }
+
+      const rawData = await res.json();
+      const spiritBuffs = parsePayload(rawData);
       const names = extractNames(spiritBuffs);
       if (names.length === 0) {
         showPrompt("warn", "⚠️ 接口未返回任何已收集项（collected=true），未做任何写入。");
@@ -273,7 +360,7 @@
       await overwriteOption(names);
       const { total, map, permanent } = countByPrefix(names);
       showPrompt("ok", `
-        <div class="spirit-prompt-banner">✅ 同步成功！已点亮并写入 Wiki 个人收集库</div>
+        <div class="spirit-prompt-banner">✅ 同步成功！已点亮并写入 Wiki 个人收集库（${usedRouteName}）</div>
         <div class="spirit-stats-grid">
           <div class="spirit-stat-item">
             <div class="spirit-stat-label">总收集光之翼</div>
