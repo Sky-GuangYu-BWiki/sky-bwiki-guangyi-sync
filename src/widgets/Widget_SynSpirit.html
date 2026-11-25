@@ -188,6 +188,69 @@
     color: #4a5dc9;
     line-height: 1.1;
   }
+  .spirit-detail-toggle-wrap {
+    text-align: center;
+    margin-top: 10px;
+  }
+  .spirit-detail-toggle-btn {
+    background: #ffffff;
+    border: 1px dashed rgba(74, 93, 201, 0.45);
+    color: #4a5dc9;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .spirit-detail-toggle-btn:hover {
+    background: rgba(74, 93, 201, 0.08);
+    border-color: #4a5dc9;
+  }
+  .spirit-detail-content {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .spirit-detail-group {
+    margin-bottom: 10px;
+  }
+  .spirit-detail-group:last-child {
+    margin-bottom: 0;
+  }
+  .spirit-detail-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+  .spirit-tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .spirit-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: Consolas, "Fira Code", monospace;
+    line-height: 1.3;
+  }
+  .tag-map {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+  }
+  .tag-perm {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+  }
   .spirit-import-footer {
     display: flex;
     justify-content: space-between;
@@ -337,13 +400,11 @@
     let usedRouteName = primary.name;
 
     try {
-      // 尝试首选线路（6秒超时）
       try {
         res = await fetchWithTimeout(primary.url + "/queryGuangyi?id=" + encodeURIComponent(uid), 6000);
         if (!res.ok) throw new Error("HTTP " + res.status);
       } catch (primaryErr) {
-        // 自动故障转移：切换备用线路重试
-        showPrompt("warn", `⚠️ 【${primary.name}】连接超时或波动，正在自动切换至【${fallback.name}】重试……`);
+        showPrompt("warn", `⚠️ 【${primary.name}】连接超时，正在自动切换至【${fallback.name}】重试……`);
         usedRouteName = fallback.name;
         if ($serviceLabel) $serviceLabel.textContent = `当前线路：${fallback.name} (自动切换)`;
         res = await fetchWithTimeout(fallback.url + "/queryGuangyi?id=" + encodeURIComponent(uid), 8000);
@@ -359,6 +420,9 @@
       }
       await overwriteOption(names);
       const { total, map, permanent } = countByPrefix(names);
+      const mapWings = names.filter(n => n.startsWith(PREFIX_MAP));
+      const permWings = names.filter(n => n.startsWith(PREFIX_PERMANENT));
+
       showPrompt("ok", `
         <div class="spirit-prompt-banner">✅ 同步成功！已点亮并写入 Wiki 个人收集库（${usedRouteName}）</div>
         <div class="spirit-stats-grid">
@@ -375,7 +439,39 @@
             <div class="spirit-stat-value">${permanent}</div>
           </div>
         </div>
+
+        <div class="spirit-detail-toggle-wrap">
+          <button type="button" id="spirit-detail-toggle" class="spirit-detail-toggle-btn">
+            <span id="spirit-toggle-text">📋 查看已收集光翼详细清单 (${total}) ▾</span>
+          </button>
+        </div>
+
+        <div id="spirit-detail-content" class="spirit-detail-content" style="display: none;">
+          <div class="spirit-detail-group">
+            <div class="spirit-detail-group-title">🗺️ 地图光之翼 (${mapWings.length})</div>
+            <div class="spirit-tags-wrap">
+              ${mapWings.map(w => `<span class="spirit-tag tag-map">${w}</span>`).join('')}
+            </div>
+          </div>
+          <div class="spirit-detail-group">
+            <div class="spirit-detail-group-title">👻 永久光之翼 (${permWings.length})</div>
+            <div class="spirit-tags-wrap">
+              ${permWings.map(w => `<span class="spirit-tag tag-perm">${w}</span>`).join('')}
+            </div>
+          </div>
+        </div>
       `);
+
+      const toggleBtn = document.getElementById("spirit-detail-toggle");
+      const detailContent = document.getElementById("spirit-detail-content");
+      const toggleText = document.getElementById("spirit-toggle-text");
+      if (toggleBtn && detailContent && toggleText) {
+        toggleBtn.onclick = function() {
+          const isHidden = detailContent.style.display === "none";
+          detailContent.style.display = isHidden ? "block" : "none";
+          toggleText.textContent = isHidden ? `📋 收起光翼详细清单 (${total}) ▴` : `📋 查看已收集光翼详细清单 (${total}) ▾`;
+        };
+      }
     } catch (e) {
       showPrompt("err", "❌ 同步失败：" + (e && e.message ? e.message : e));
     } finally {
