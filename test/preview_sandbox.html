@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>BWiki 复刻计时器光翼导入组件 - 本地沙盒模拟器</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f0f2f5;
+      padding: 30px;
+      color: #333;
+    }
+    .sandbox-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .sandbox-header {
+      border-bottom: 2px solid #7bc2de;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .sandbox-meta {
+      background: #eef8fc;
+      border-left: 4px solid #7bc2de;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #31708f;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .mock-console {
+      background: #1e1e1e;
+      color: #85e89d;
+      font-family: Consolas, monospace;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sandbox-container">
+  <div class="sandbox-header">
+    <h2>🎮 BWiki Widget:SynSpirit 本地沙盒环境</h2>
+  </div>
+  
+  <div class="sandbox-meta">
+    ℹ️ <b>沙盒说明</b>：此页面本地模拟了 MediaWiki 的 <code>mw.Api()</code> 环境。点击查询将真实请求你的 Cloudflare 双线生产 API <code>https://cf-guangyi.vincentzyu233.cn</code>，并在下方控制台模拟输出写入用户配置。
+  </div>
+
+  <!-- Widget 宿主 -->
+  <div id="widget-mount-point"></div>
+
+  <div class="mock-console" id="mock-console">
+    > 模拟器已就绪，等待交互...
+  </div>
+</div>
+
+<!-- 注入 MediaWiki 模拟对象 -->
+<script>
+window.mw = {
+  config: {
+    get: function(key) {
+      if (key === 'wgUserName') return 'VincentZyu_Admin';
+      return null;
+    }
+  },
+  Api: function() {
+    return {
+      get: async function(params) {
+        logConsole('调用 mw.Api.get: ' + JSON.stringify(params));
+        return {
+          query: {
+            userinfo: {
+              id: 34318934,
+              name: 'VincentZyu_Admin',
+              options: {}
+            }
+          }
+        };
+      },
+      postWithToken: async function(token, params) {
+        logConsole('✅ 成功模拟写入 B站配置 (mw.Api.postWithToken):');
+        logConsole('  - optionname: ' + params.optionname);
+        logConsole('  - 写入项目数: ' + (params.optionvalue ? params.optionvalue.split(',').length : 0) + ' 个节点');
+        return { options: 'success' };
+      }
+    };
+  }
+};
+
+function logConsole(msg) {
+  const c = document.getElementById('mock-console');
+  c.innerHTML += '<br>' + msg;
+  c.scrollTop = c.scrollHeight;
+}
+</script>
+
+<!-- 加载实际的 Widget HTML 片段 -->
+<script>
+fetch('../src/widgets/Widget_SynSpirit.html')
+  .then(res => res.text())
+  .then(html => {
+    // 过滤掉 includeonly 标签，挂载到页面
+    const cleanHtml = html
+      .replace(/<includeonly>/g, '')
+      .replace(/<\/includeonly>[\s\S]*/g, '');
+    
+    const mount = document.getElementById('widget-mount-point');
+    mount.innerHTML = cleanHtml;
+
+    // 执行 script
+    const scripts = mount.querySelectorAll('script');
+    scripts.forEach(s => {
+      const runScript = document.createElement('script');
+      runScript.text = s.text;
+      document.body.appendChild(runScript);
+    });
+    logConsole('> Widget 代码已成功挂载渲染');
+  })
+  .catch(err => {
+    logConsole('❌ 加载 Widget 失败: ' + err.message);
+  });
+</script>
+
+</body>
+</html>
