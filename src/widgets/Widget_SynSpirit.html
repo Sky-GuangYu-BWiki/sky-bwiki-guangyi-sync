@@ -256,6 +256,16 @@
     opacity: 0.75;
     margin-left: 2px;
   }
+  .spirit-tag .tag-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.06);
+    color: inherit;
+    opacity: 0.88;
+    margin-left: 2px;
+  }
   .tag-map {
     background: #e0f2fe;
     color: #0369a1;
@@ -425,6 +435,7 @@
                   <span>${isSpirit ? '👻' : '✨'}</span>
                   <span>${it.displayName}</span>
                   ${it.sub ? `<span class="tag-sub">(${it.sub})</span>` : ''}
+                  ${it.id && it.id !== it.displayName ? `<code class="tag-id">${it.id}</code>` : ''}
                 </span>
               `).join('')}
             </div>
@@ -445,6 +456,7 @@
               ${items.map(it => `
                 <span class="spirit-tag tag-map" title="${it.id}">
                   <span>${it.displayName}</span>
+                  ${it.id && it.id !== it.displayName ? `<code class="tag-id">${it.id}</code>` : ''}
                 </span>
               `).join('')}
             </div>
