@@ -1,6 +1,6 @@
 # 光遇 BWiki 复刻计时器与光翼查询板块同步仓库 (sky-bwiki-guangyi-sync)
 
-> 🎮 **线上核心词条**：[复刻计时器](https://wiki.biligame.com/sky/复刻计时器)（永久短链：[curid=10607](https://wiki.biligame.com/sky/?curid=10607)）  
+> 🎮 **线上核心词条**：[https://wiki.biligame.com/sky/复刻计时器](https://wiki.biligame.com/sky/复刻计时器)（永久数字短链：[curid=10607](https://wiki.biligame.com/sky/?curid=10607)）  
 > 🧩 **对应核心组件**：[Widget:SynSpirit](https://wiki.biligame.com/sky/Widget:SynSpirit)（[编辑直达](https://wiki.biligame.com/sky/Widget:SynSpirit?action=edit)）  
 > 🏷️ **归属组织**：[Sky-GuangYu-BWiki](https://github.com/Sky-GuangYu-BWiki)  
 > 📦 **上游核心插件**：[koishi-plugin-wydashen-guangyi-query](https://github.com/VincentZyuApps/koishi-plugin-wydashen-guangyi-query) ⭐ *(光翼数据源与核心算法)*  
