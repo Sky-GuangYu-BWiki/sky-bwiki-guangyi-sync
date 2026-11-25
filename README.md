@@ -18,11 +18,11 @@
   <img src="doc/images/widget-live-preview.png" width="900" alt="线上Widget运行实况">
 </p>
 
-### 2. 复刻计时器宿主词条全貌 (curid=10607)
-组件挂载于「复刻计时器」词条的第三个标签页 **「导入」** 中，左侧无缝联动「国服」与「国际服」先祖排期大盘：
+### 2. 复刻计时器宿主大盘全貌与联动效果 (curid=10607)
+一键导入后无缝点亮「国服」与「国际服」先祖排期大盘，支持通过上方工具条自由筛选「仅已获取 / 隐藏已获取」，直观查看先祖回归倒计时与收集进度：
 
 <p align="center">
-  <img src="doc/images/wiki-page-overview.png" width="900" alt="复刻计时器页面全貌">
+  <img src="doc/images/wiki-page-overview.png" width="900" alt="复刻计时器先祖大盘与联动实况">
 </p>
 
 ---
