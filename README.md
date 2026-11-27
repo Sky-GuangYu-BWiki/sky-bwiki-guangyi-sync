@@ -47,10 +47,10 @@
 
 | 页面 / 组件 | 线上真实 URL | 职责与技术定位 |
 | :--- | :--- | :--- |
-| **复刻计时器** (宿主) | `https://wiki.biligame.com/sky/复刻计时器`<br>（或 `?curid=10607`） | **玩家核心使用端**。包含国服/国际服先祖勾选卡片列表、复刻排期倒计时及导入页签。 |
-| **旅行先祖回归记录** | `https://wiki.biligame.com/sky/旅行先祖回归记录` | **全历史大表**。展示全服自开服以来所有旅行先祖回归的物价与详细时间记录。 |
-| **Widget:SynSpirit** | `https://wiki.biligame.com/sky/Widget:SynSpirit` | **数据自动同步挂件**。负责跨域网络请求、双线测速容灾、中文字典匹配及 MediaWiki 偏好写入。 |
-| **Widget:复刻计时器排序** | `https://wiki.biligame.com/sky/Widget:复刻计时器排序` | **先祖列表工具条**。负责「排序反转」、「复刻次数排序」、「隐藏已获取先祖」、「全部勾选」等前端 DOM 交互。 |
+| **复刻计时器** (宿主) | [https://wiki.biligame.com/sky/复刻计时器](https://wiki.biligame.com/sky/复刻计时器)<br>（或 [?curid=10607](https://wiki.biligame.com/sky/?curid=10607)） | **玩家核心使用端**。包含国服/国际服先祖勾选卡片列表、复刻排期倒计时及导入页签。 |
+| **旅行先祖回归记录** | [https://wiki.biligame.com/sky/旅行先祖回归记录](https://wiki.biligame.com/sky/旅行先祖回归记录) | **全历史大表**。展示全服自开服以来所有旅行先祖回归的物价与详细时间记录。 |
+| **Widget:SynSpirit** | [https://wiki.biligame.com/sky/Widget:SynSpirit](https://wiki.biligame.com/sky/Widget:SynSpirit) | **数据自动同步挂件**。负责跨域网络请求、双线测速容灾、中文字典匹配及 MediaWiki 偏好写入。 |
+| **Widget:复刻计时器排序** | [https://wiki.biligame.com/sky/Widget:复刻计时器排序](https://wiki.biligame.com/sky/Widget:复刻计时器排序) | **先祖列表工具条**。负责「排序反转」、「复刻次数排序」、「隐藏已获取先祖」、「全部勾选」等前端 DOM 交互。 |
 
 ---
 
@@ -135,13 +135,16 @@ sky-bwiki-guangyi-sync/
 │   │   └── wing-dict.min.json   # 紧凑内嵌版字典 (~13KB)
 │   ├── pages/                   # 词条页面源码
 │   │   └── 复刻计时器.wikitext    # 复刻计时器主词条的完整 Wikitext (curid=10607)
-│   └── widgets/                 # 核心挂件源码（包含原生 JS / CSS / HTML）
-│       ├── Widget_SynSpirit.html # 光翼与先祖数据自动查询同步组件 (内嵌中文映射与双线容灾)
-│       └── Widget_复刻计时器排序.html # 复刻先祖列表动态排序展示组件
+│   └── widgets/                 # 核心挂件源码（唯一需要上传维护的活跃业务组件）
+│       └── Widget_SynSpirit.html # 光翼与先祖数据自动查询同步组件 (内嵌中文映射与双线容灾)
 ├── test/                        # 本地免安装运行沙盒
 │   └── preview_sandbox.html     # 支持双线切换、中文抽屉折叠展开的本地测试沙盒页
-├── snapshots/                   # 线上版本快照与元数据
-│   └── rev_metadata.json        # 记录 MediaWiki 线上对应的 revid、时间戳与作者
+├── snapshots/                   # 线上版本快照与历史归档
+│   ├── rev_metadata.json        # 记录 MediaWiki 线上对应的 revid、时间戳与作者
+│   ├── upstream/                # 上游成熟组件只读镜像归档（无需重复上传）
+│   │   └── Widget_复刻计时器排序.html # 先祖列表动态排序组件镜像备份
+│   ├── Widget_SynSpirit.20261125_rev28482.bak.html # 上线历史版本快照
+│   └── Widget_SynSpirit.20261127_rev28488.bak.html # 最新发布版本快照
 └── scripts/                     # 自动化同步与运维工具
     ├── sync-wing-dict.py        # 从上游 koishi-plugin-wydashen-guangyi-query 提取并生成中文字典
     └── backup_from_wiki.py      # 一键拉取线上最新状态并生成本地差分
