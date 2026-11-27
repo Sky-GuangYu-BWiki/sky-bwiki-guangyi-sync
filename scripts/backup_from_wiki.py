@@ -7,7 +7,7 @@ from datetime import datetime
 PAGES = [
     ("复刻计时器", "src/pages/复刻计时器.wikitext"),
     ("Widget:SynSpirit", "src/widgets/Widget_SynSpirit.html"),
-    ("Widget:复刻计时器排序", "src/widgets/Widget_复刻计时器排序.html"),
+    ("Widget:复刻计时器排序", "snapshots/upstream/Widget_复刻计时器排序.html"),
 ]
 
 BASE_URL = "https://wiki.biligame.com/sky/api.php"

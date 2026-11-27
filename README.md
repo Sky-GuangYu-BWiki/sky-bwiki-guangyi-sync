@@ -115,7 +115,7 @@
    - 为英文代码增加等宽字体容器与轻量背景徽章，美观直观，便于对照。
 
 3. **📦 轻量紧凑中文字典内嵌**：
-   - 通过本地 `scripts/sync-wing-dict.py` 自动化抽取上游 Koishi 核心插件字典；
+   - 通过本地 `scripts/sync_wing_dict.py` 自动化抽取上游 Koishi 核心插件字典；
    - 包含 259 个地图标签与 388 个先祖译名，编译压缩后仅 ~13.3 KB，零额外网络依赖。
 
 ---
@@ -146,7 +146,7 @@ sky-bwiki-guangyi-sync/
 │   ├── Widget_SynSpirit.20261125_rev28482.bak.html # 上线历史版本快照
 │   └── Widget_SynSpirit.20261127_rev28488.bak.html # 最新发布版本快照
 └── scripts/                     # 自动化同步与运维工具
-    ├── sync-wing-dict.py        # 从上游 koishi-plugin-wydashen-guangyi-query 提取并生成中文字典
+    ├── sync_wing_dict.py        # 从上游 koishi 插件通过 gh cli 提取并生成中文字典 (支持 --proxy)
     └── backup_from_wiki.py      # 一键拉取线上最新状态并生成本地差分
 ```
 
@@ -171,9 +171,9 @@ curl -X POST "https://wiki.biligame.com/sky/api.php?action=purge&titles=复刻�
 ```bash
 python scripts/backup_from_wiki.py
 ```
-若上游光遇版本新增了地图光翼或先祖，运行提取脚本更新字典：
+若上游光遇版本新增了地图光翼或先祖，通过 `gh cli` 调用提取脚本更新字典（支持 `--proxy` 参数或环境变量代理）：
 ```bash
-python scripts/sync-wing-dict.py
+python scripts/sync_wing_dict.py --proxy http://127.0.0.1:7890
 ```
 
 ---
