@@ -204,7 +204,7 @@ python scripts/sync-wing-dict.py
    - 上传成功后自动跳转到维基词条：`https://wiki.biligame.com/sky/File:光遇_游戏ID查询教程指引.png`；
    - **鼠标右键点击图片 ➔ 选择「复制图片链接」**，即可获得类似如下的官方 CDN 最终外链：
      ```text
-     https://patchwiki.biligame.com/images/sky/x/xx/xxxxxxxxxxxxxxxxxxxxxxxx.png
+     https://patchwiki.biligame.com/images/sky/3/3b/ooinnj9wbc7arn71e208jypticidoag.png
      ```
 
 ### 3. 组件（Widget）端接入交互建议（Modal 弹窗灯箱）
@@ -215,4 +215,16 @@ python scripts/sync-wing-dict.py
 - **弹窗**：点击后弹出居中遮罩层，限制最大高度为屏幕的 85%（`max-height: 85vh; overflow-y: auto;`）；
 - **关闭**：支持点击右上角 `✕`、点击半透明背景遮罩、或按下键盘 <kbd>Esc</kbd> 键秒速退出；
 - **优点**：平时界面保持极致轻简，按需呼出，兼顾手机端与桌面端自适应体验。
+
+### 4. 线上真实 CDN 产物展示
+
+> 🔗 **官方 CDN 直链与原图直达**：  
+> [https://patchwiki.biligame.com/images/sky/3/3b/ooinnj9wbc7arn71e208jypticidoag.png](https://patchwiki.biligame.com/images/sky/3/3b/ooinnj9wbc7arn71e208jypticidoag.png)
+
+<p align="center">
+  <a href="https://patchwiki.biligame.com/images/sky/3/3b/ooinnj9wbc7arn71e208jypticidoag.png" target="_blank" rel="noopener noreferrer">
+    <img src="https://patchwiki.biligame.com/images/sky/3/3b/ooinnj9wbc7arn71e208jypticidoag.png" width="380" alt="网易国服 Sky 光遇 - 游戏ID查询方法指引" />
+  </a>
+</p>
+
 
